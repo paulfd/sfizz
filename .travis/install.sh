@@ -3,7 +3,9 @@
 set -ex
 . .travis/environment.sh
 
-if [[ ${CROSS_COMPILE} == "mingw32" || ${CROSS_COMPILE} == "mingw64" ]]; then
+if [[ ${STATIC_LV2} == "true" ]]; then
+  gcc -v && g++ -v && cmake --version && /usr/local/bin/cmake --version && $SHELL --version
+elif [[ ${CROSS_COMPILE} == "mingw32" || ${CROSS_COMPILE} == "mingw64" ]]; then
   buildenv pacman -Sqy --noconfirm
   buildenv pacman -Sq --noconfirm base-devel wget mingw-w64-cmake mingw-w64-gcc mingw-w64-pkg-config mingw-w64-libsndfile
   buildenv i686-w64-mingw32-gcc -v && buildenv i686-w64-mingw32-g++ -v && buildenv i686-w64-mingw32-cmake --version
