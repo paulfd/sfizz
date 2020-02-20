@@ -24,8 +24,9 @@ elif [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
   wget -q ${cmake_url}
   tar xzf ${cmake_arc}
   cd ${TRAVIS_BUILD_DIR}/${cmake_dir}
-  sudo cp    bin/*   /usr/local/bin/
-  sudo cp -r share/* /usr/local/share/
+  # We don't need this for now
+  # sudo cp    bin/*   /usr/local/bin/
+  # sudo cp -r share/* /usr/local/share/
 elif [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
   sudo ln -s /usr/local /opt/local
   brew update

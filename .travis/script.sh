@@ -15,7 +15,7 @@ elif [[ ${CROSS_COMPILE} == "mingw64" ]]; then
   buildenv make -j
 elif [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
 
-  buildenv cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=${PWD}/${INSTALL_DIR} ..
+  buildenv cmake -DCMAKE_BUILD_TYPE=Release -DSFIZZ_STATIC_LIBSNDFILE=ON -DCMAKE_INSTALL_PREFIX:PATH=${PWD}/${INSTALL_DIR} ..
   buildenv make -j$(nproc)
 elif [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
 
