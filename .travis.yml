@@ -45,7 +45,7 @@ jobs:
     dist: bionic
     # Change before integrating...
     # if: (tag IS present) AND (branch = master)
-    if: (tag IS blank) AND (branch = travis-stages-and-doc)
+    if: (tag IS present) AND (branch = travis-stages-and-doc)
     addons:
       apt:
         packages:
