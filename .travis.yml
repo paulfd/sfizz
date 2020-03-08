@@ -3,18 +3,22 @@ language: cpp
 jobs:
   include:
   - os:   linux
+    stage: "Build"
+    name: "Windows mingw32"
     env:
     - CROSS_COMPILE=mingw32
     - CONTAINER=cross
     - INSTALL_DIR="sfizz-${TRAVIS_BRANCH}-mingw32"
 
   - os:   linux
+    name: "Windows mingw64"
     env:
     - CROSS_COMPILE=mingw64
     - CONTAINER=cross
     - INSTALL_DIR="sfizz-${TRAVIS_BRANCH}-mingw64"
 
   - os:   linux
+    name: "Linux amd64 library"
     arch: amd64
     dist: bionic
     env:
@@ -28,6 +32,7 @@ jobs:
         - doxygen
 
   - os:   linux
+    name: "Linux arm64 library"
     arch: arm64
     dist: bionic
     env:
@@ -38,6 +43,7 @@ jobs:
         - sourceline: 'ppa:ubuntu-toolchain-r/test'
 
   - os:   linux
+    name: "Linux arm64 static LV2"
     arch: arm64
     dist: bionic
     env:
@@ -49,7 +55,8 @@ jobs:
         - sourceline: 'ppa:ubuntu-toolchain-r/test'
 
   - os:   linux
-    arch: amd64
+    name: "Linux amd64 static LV2"
+    name: "sfizz-linux-amd64-lv2"
     dist: bionic
     env:
       - BUILD_TYPE=lv2
@@ -60,11 +67,14 @@ jobs:
         - sourceline: 'ppa:ubuntu-toolchain-r/test'
 
   - os: osx
+    name: "macOS"
     osx_image: xcode10.1
     env:
     - INSTALL_DIR="sfizz-${TRAVIS_BRANCH}-${TRAVIS_OS_NAME}-${TRAVIS_CPU_ARCH}"
 
   - os:   linux
+    stage: "Deploy"
+    name: "Source packaging"
     env:
     - BUILD_TYPE=source
     - INSTALL_DIR="sfizz-${TRAVIS_BRANCH}-src"
@@ -85,6 +95,24 @@ jobs:
     after_failure:
     - true
 
+    after_success:
+    - true
+
+  - os:   linux
+    name: "Generating documentation"
+    dist: bionic
+    addons:
+      apt:
+        packages:
+        - doxygen
+    before_install:
+    - true
+    install:
+    - sudo pip install git-archive-all
+    script:
+    - git-archive-all --prefix="sfizz-${TRAVIS_BRANCH}/" -9 "${INSTALL_DIR}.tar.gz"
+    after_failure:
+    - true
     after_success:
     - true
 
