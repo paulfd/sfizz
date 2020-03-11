@@ -112,24 +112,23 @@ jobs:
 
   - name: "macOS"
     os: osx
-    osx_image: xcode11.3
     env:
     - INSTALL_DIR="sfizz-${TRAVIS_BRANCH}-${TRAVIS_OS_NAME}-${TRAVIS_CPU_ARCH}"
     install: .travis/install_osx.sh
     script: .travis/script_osx.sh
     after_success: .travis/prepare_tarball.sh
 
-  - stage: "Deploy"
-    name: "Source packaging"
-    if: (tag IS present) AND (branch = master) AND (type = push)
-    env:
-    - INSTALL_DIR="sfizz-${TRAVIS_BRANCH}-src"
-    addons:
-      apt:
-        packages:
-        - python-pip
-    install: sudo pip install git-archive-all
-    script: git-archive-all --prefix="sfizz-${TRAVIS_BRANCH}/" -9 "${INSTALL_DIR}.tar.gz"
+  # - stage: "Deploy"
+  #   name: "Source packaging"
+  #   if: (tag IS present) AND (branch = master) AND (type = push)
+  #   env:
+  #   - INSTALL_DIR="sfizz-${TRAVIS_BRANCH}-src"
+  #   addons:
+  #     apt:
+  #       packages:
+  #       - python-pip
+  #   install: sudo pip install git-archive-all
+  #   script: git-archive-all --prefix="sfizz-${TRAVIS_BRANCH}/" -9 "${INSTALL_DIR}.tar.gz"
 
 #   - name: "Generate documentation"
 #     if: (tag IS present) AND (branch = master) AND (type = push)
