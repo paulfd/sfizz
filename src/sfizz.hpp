@@ -258,8 +258,9 @@ public:
      * @brief Enable logging of timings to sidecar CSV files. This can produce
      * many outputs so use with caution.
      *
+     * @param prefix the file prefix to use for logging
      */
-    void enableLogging() noexcept;
+    void enableLogging(const std::string& prefix = "") noexcept;
     /**
      * @brief Disable logging;
      *

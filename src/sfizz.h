@@ -370,7 +370,7 @@ SFIZZ_EXPORTED_API bool sfizz_should_reload_file(sfizz_synth_t* synth);
  *
  * @param synth
  */
-SFIZZ_EXPORTED_API void sfizz_enable_logging(sfizz_synth_t* synth);
+SFIZZ_EXPORTED_API void sfizz_enable_logging(sfizz_synth_t* synth, const char* prefix);
 
 /**
  * @brief Disable logging

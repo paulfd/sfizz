@@ -186,9 +186,9 @@ bool sfz::Sfizz::shouldReloadFile()
     return synth->shouldReloadFile();
 }
 
-void sfz::Sfizz::enableLogging() noexcept
+void sfz::Sfizz::enableLogging(const std::string& prefix) noexcept
 {
-    synth->enableLogging();
+    synth->enableLogging(prefix);
 }
 
 void sfz::Sfizz::disableLogging() noexcept

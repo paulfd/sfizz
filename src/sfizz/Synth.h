@@ -355,7 +355,7 @@ public:
      * many outputs so use with caution.
      *
      */
-    void enableLogging() noexcept;
+    void enableLogging(absl::string_view prefix = "") noexcept;
     /**
      * @brief Disable logging;
      *
