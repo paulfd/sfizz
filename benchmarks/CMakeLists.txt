@@ -87,6 +87,7 @@ target_link_libraries(bm_readChunk PRIVATE sfizz-sndfile)
 sfizz_add_benchmark(bm_resampleChunk BM_resampleChunk.cpp)
 target_link_libraries(bm_resampleChunk PRIVATE sfizz-sndfile)
 
+sfizz_add_benchmark(bm_vaFilters BM_vaFilters.cpp)
 sfizz_add_benchmark(bm_filterModulation BM_filterModulation.cpp ../src/sfizz/SfzFilter.cpp)
 target_link_libraries(bm_filterModulation PRIVATE sfizz-sndfile)
 
