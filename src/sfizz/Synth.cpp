@@ -37,10 +37,9 @@ sfz::Synth::Synth(int numVoices)
 sfz::Synth::~Synth()
 {
     const std::lock_guard<std::mutex> disableCallback { callbackGuard };
-
-    for (auto& voice : voices)
+    applyToAllVoices([](VoicePtr& voice){
         voice->reset();
-
+    });
     resources.filePool.emptyFileLoadingQueues();
 }
 
@@ -124,8 +123,9 @@ void sfz::Synth::clear()
 {
     const std::lock_guard<std::mutex> disableCallback { callbackGuard };
 
-    for (auto& voice : voices)
+    applyToAllVoices([](VoicePtr& voice){
         voice->reset();
+    });
     for (auto& list : noteActivationLists)
         list.clear();
     for (auto& list : ccActivationLists)
@@ -480,10 +480,11 @@ void sfz::Synth::finalizeSfzLoad()
     regions.resize(remainingRegions);
     modificationTime = checkModificationTime();
 
-    for (auto& voice : voices) {
+
+    applyToAllVoices([&](std::unique_ptr<Voice>& voice) {
         voice->setMaxFiltersPerVoice(maxFilters);
         voice->setMaxEQsPerVoice(maxEQs);
-    }
+    });
 }
 
 sfz::Voice* sfz::Synth::findFreeVoice() noexcept
@@ -571,8 +572,9 @@ void sfz::Synth::setSamplesPerBlock(int samplesPerBlock) noexcept
     const std::lock_guard<std::mutex> disableCallback { callbackGuard };
 
     this->samplesPerBlock = samplesPerBlock;
-    for (auto& voice : voices)
+    applyToAllVoices([&](VoicePtr& voice) {
         voice->setSamplesPerBlock(samplesPerBlock);
+    });
 
     resources.setSamplesPerBlock(samplesPerBlock);
 
@@ -587,8 +589,9 @@ void sfz::Synth::setSampleRate(float sampleRate) noexcept
     const std::lock_guard<std::mutex> disableCallback { callbackGuard };
 
     this->sampleRate = sampleRate;
-    for (auto& voice : voices)
+    applyToAllVoices([&](VoicePtr& voice) {
         voice->setSampleRate(sampleRate);
+    });
 
     resources.setSampleRate(sampleRate);
 
@@ -652,17 +655,16 @@ void sfz::Synth::renderBlock(AudioSpan<float> buffer) noexcept
             }
         }
 
-        for (auto& voice : voices) {
-            if (voice->isFree())
-                continue;
-
-            numActiveVoices++;
-            renderVoiceToOutputs(*voice, *tempSpan);
-            callbackBreakdown.data += voice->getLastDataDuration();
-            callbackBreakdown.amplitude += voice->getLastAmplitudeDuration();
-            callbackBreakdown.filters += voice->getLastFilterDuration();
-            callbackBreakdown.panning += voice->getLastPanningDuration();
-        }
+        applyToAllVoices([&](VoicePtr& voice) {
+            if (!voice->isFree()) {
+                numActiveVoices++;
+                renderVoiceToOutputs(*voice, *tempSpan);
+                callbackBreakdown.data += voice->getLastDataDuration();
+                callbackBreakdown.amplitude += voice->getLastAmplitudeDuration();
+                callbackBreakdown.filters += voice->getLastFilterDuration();
+                callbackBreakdown.panning += voice->getLastPanningDuration();
+            }
+        });
     }
 
     { // Apply effect buses
@@ -1068,6 +1070,16 @@ void sfz::Synth::resetVoices(int numVoices)
         voice->setSampleRate(this->sampleRate);
         voice->setSamplesPerBlock(this->samplesPerBlock);
         voiceViewArray.push_back(voice.get());
+    }
+
+    overflowVoices.clear();
+    overflowVoices.reserve(numVoices);
+    for (int i = 0; i < numVoices; ++i)
+        overflowVoices.push_back(absl::make_unique<Voice>(resources));
+
+    for (auto& voice : overflowVoices) {
+        voice->setSampleRate(this->sampleRate);
+        voice->setSamplesPerBlock(this->samplesPerBlock);
     }
 
     this->numVoices = numVoices;
