@@ -45,9 +45,21 @@ sfz::Synth::~Synth()
 
 void sfz::Synth::onParseFullBlock(const std::string& header, const std::vector<Opcode>& members)
 {
+    const auto newRegionSet = [&]() {
+        sets.emplace_back(new RegionSet);
+        auto newSet = sets.back().get();
+        auto parentSet = currentSet->getParent();
+        ASSERT(parentSet != nullptr);
+        if (parentSet == nullptr)
+            parentSet = sets.front().get();
+        parentSet->addSubset(newSet);
+        currentSet = newSet;
+    };
+
     switch (hash(header)) {
     case hash("global"):
         globalOpcodes = members;
+        currentSet = sets.front().get();
         groupOpcodes.clear();
         masterOpcodes.clear();
         handleGlobalOpcodes(members);
@@ -58,11 +70,13 @@ void sfz::Synth::onParseFullBlock(const std::string& header, const std::vector<O
         break;
     case hash("master"):
         masterOpcodes = members;
+        newRegionSet();
         groupOpcodes.clear();
         numMasters++;
         break;
     case hash("group"):
         groupOpcodes = members;
+        newRegionSet();
         handleGroupOpcodes(members, masterOpcodes);
         numGroups++;
         break;
@@ -94,6 +108,7 @@ void sfz::Synth::onParseWarning(const SourceRange& range, const std::string& mes
 
 void sfz::Synth::buildRegion(const std::vector<Opcode>& regionOpcodes)
 {
+    ASSERT(currentSet != nullptr);
     auto lastRegion = absl::make_unique<Region>(resources.midiState, defaultPath);
 
     auto parseOpcodes = [&](const std::vector<Opcode>& opcodes) {
@@ -116,6 +131,8 @@ void sfz::Synth::buildRegion(const std::vector<Opcode>& regionOpcodes)
     if (octaveOffset != 0 || noteOffset != 0)
         lastRegion->offsetAllKeys(octaveOffset * 12 + noteOffset);
 
+    lastRegion->parent = currentSet;
+    currentSet->addRegion(lastRegion.get());
     regions.push_back(std::move(lastRegion));
 }
 
@@ -131,6 +148,9 @@ void sfz::Synth::clear()
     for (auto& list : ccActivationLists)
         list.clear();
 
+    sets.clear();
+    sets.emplace_back(new RegionSet);
+    currentSet = sets.front().get();
     regions.clear();
     effectBuses.clear();
     effectBuses.emplace_back(new EffectBus);
