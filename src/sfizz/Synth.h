@@ -607,6 +607,20 @@ private:
     std::vector<RegionPtr> regions;
     std::vector<VoicePtr> voices;
     std::vector<VoicePtr> overflowVoices;
+
+    enum class VoiceStealingPolicy {
+        Standard,
+    };
+    /**
+     * @brief Steal a voice from a set of candidates.
+     * Returns null if no
+     *
+     * @param candidates
+     * @return sfz::Voice*
+     */
+    Voice* stealVoice(VoiceViewVector& candidates,
+        VoiceStealingPolicy policy = VoiceStealingPolicy::Standard);
+
     // These are more general "groups" than sfz and encapsulates the full hierarchy
     enum class Header { Global, Master, Group };
     RegionSet* currentSet;
@@ -615,7 +629,8 @@ private:
     // These are the `group=` groups where you can off voices
     std::vector<PolyphonyGroup> polyphonyGroups;
     // Views to speed up iteration over the regions and voices
-    VoiceViewVector voiceViewVector;
+    VoiceViewVector allVoiceViews;
+    VoiceViewVector tempVoiceViews;
     std::array<RegionViewVector, 128> noteActivationLists;
     std::array<RegionViewVector, config::numCCs> ccActivationLists;
 

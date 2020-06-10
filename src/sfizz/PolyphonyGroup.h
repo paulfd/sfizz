@@ -27,6 +27,7 @@ public:
         }
     }
     const std::vector<Voice*>& getActiveVoices() const { return voices; }
+    std::vector<Voice*>& getActiveVoices() { return voices; }
 private:
     unsigned polyphonyLimit { config::maxVoices };
     std::vector<Voice*> voices;

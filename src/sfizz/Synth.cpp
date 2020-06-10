@@ -545,29 +545,25 @@ void sfz::Synth::finalizeSfzLoad()
     });
 }
 
-sfz::Voice* sfz::Synth::findFreeVoice() noexcept
+sfz::Voice* sfz::Synth::stealVoice(sfz::Synth::VoiceViewVector& candidates, VoiceStealingPolicy policy)
 {
-    auto freeVoice = absl::c_find_if(voices, [](const std::unique_ptr<Voice>& voice) {
-        return voice->isFree();
-    });
-    if (freeVoice != voices.end())
-        return freeVoice->get();
-
+    UNUSED(policy);
     // Start of the voice stealing algorithm
-    absl::c_sort(voiceViewVector, voiceOrdering);
+    absl::c_sort(candidates, voiceOrdering);
 
-    const auto sumEnvelope = absl::c_accumulate(voiceViewVector, 0.0f, [](float sum, const Voice* v) {
+    const auto sumEnvelope = absl::c_accumulate(candidates, 0.0f, [](float sum, const Voice* v) {
         return sum + v->getAverageEnvelope();
     });
+
     const auto envThreshold = sumEnvelope
-        / static_cast<float>(voiceViewVector.size()) * config::stealingEnvelopeCoeff;
-    const auto ageThreshold = voiceViewVector.front()->getAge() * config::stealingAgeCoeff;
+        / static_cast<float>(candidates.size()) * config::stealingEnvelopeCoeff;
+    const auto ageThreshold = candidates.front()->getAge() * config::stealingAgeCoeff;
 
 
-    Voice* returnedVoice = voiceViewVector.front();
+    Voice* returnedVoice = candidates.front();
     unsigned idx = 0;
-    while (idx < voiceViewVector.size()) {
-        const auto ref = voiceViewVector[idx];
+    while (idx < candidates.size()) {
+        const auto ref = candidates[idx];
 
         if (ref->getAge() < ageThreshold) {
             // Went too far, we'll kill the oldest note.
@@ -586,7 +582,7 @@ sfz::Voice* sfz::Synth::findFreeVoice() noexcept
 
         // Jump over the sister voices in the set
         do { idx++; }
-        while (idx < voiceViewVector.size() && sisterVoices(ref, voiceViewVector[idx]));
+        while (idx < candidates.size() && sisterVoices(ref, candidates[idx]));
     }
 
     auto tempSpan = resources.bufferPool.getStereoBuffer(samplesPerBlock);
@@ -597,6 +593,17 @@ sfz::Voice* sfz::Synth::findFreeVoice() noexcept
     });
     ASSERT(returnedVoice->isFree());
     return returnedVoice;
+}
+
+sfz::Voice* sfz::Synth::findFreeVoice() noexcept
+{
+    auto freeVoice = absl::c_find_if(voices, [](const std::unique_ptr<Voice>& voice) {
+        return voice->isFree();
+    });
+    if (freeVoice != voices.end())
+        return freeVoice->get();
+
+    return {};
 }
 
 int sfz::Synth::getNumActiveVoices() const noexcept
@@ -842,16 +849,17 @@ void sfz::Synth::noteOnDispatch(int delay, int noteNumber, float velocity) noexc
     for (auto& region : noteActivationLists[noteNumber]) {
         if (region->registerNoteOn(noteNumber, velocity, randValue)) {
             unsigned notePolyphonyCounter { 0 };
-            unsigned regionPolyphonyCounter { 0 };
             Voice* selfMaskCandidate { nullptr };
+            tempVoiceViews.clear();
 
             for (auto& voice : voices) {
                 const auto voiceRegion = voice->getRegion();
-                if (voiceRegion == nullptr)
+                if (voice->isFree() || voiceRegion == nullptr)
                     continue;
 
-                if (voiceRegion == region)
-                    regionPolyphonyCounter += 1;
+                if (voiceRegion == region) {
+                    tempVoiceViews.push_back(voice.get());
+                }
 
                 if (region->notePolyphony) {
                     if (voice->getTriggerNumber() == noteNumber && voice->getTriggerType() == Voice::TriggerType::NoteOn) {
@@ -875,36 +883,39 @@ void sfz::Synth::noteOnDispatch(int delay, int noteNumber, float velocity) noexc
                     noteOffDispatch(delay, voice->getTriggerNumber(), voice->getTriggerValue());
             }
 
-            // FIXME: After killing something (possibly) we should decrease the number of active notes
-            // to avoid calling another voice stealing say at a group level or master level
-            // FIXME: Do something for the polyphony limit
-            if (polyphonyGroups[region->group].getActiveVoices().size()
-                == polyphonyGroups[region->group].getPolyphonyLimit())
-                continue;
+            // Check all the polyphony limits
+            Voice* voice { nullptr };
+            auto polyphonyGroupVoices = polyphonyGroups[region->group].getActiveVoices();
 
-            // FIXME: Do something for the polyphony limit
-            if (regionPolyphonyCounter >= region->polyphony)
-                continue;
-
-            auto parent = region->parent;
-            while (parent != nullptr) {
-                // FIXME: Do something for the polyphony limit
-                if (parent->getActiveVoices().size() >= parent->getPolyphonyLimit())
-                    continue;
-
-                parent = parent->getParent();
-            }
-
-            if (region->notePolyphony && notePolyphonyCounter >= *region->notePolyphony) {
+            if (polyphonyGroupVoices.size()
+                == polyphonyGroups[region->group].getPolyphonyLimit()) {
+                voice = stealVoice(polyphonyGroupVoices);
+            } else if (tempVoiceViews.size() >= region->polyphony) {
+                voice = stealVoice(tempVoiceViews);
+            } else if (region->notePolyphony && notePolyphonyCounter >= *region->notePolyphony) {
                 if (selfMaskCandidate != nullptr)
                     selfMaskCandidate->release(delay);
-                else // We're the lowest velocity guy here
+                else // We're the lowest velocity guy here, so we just don't start
                     continue;
+            } else {
+                auto parent = region->parent;
+                while (parent != nullptr) {
+                    auto activeVoices = parent->getActiveVoices();
+                    if (activeVoices.size() >= parent->getPolyphonyLimit())
+                        stealVoice(activeVoices);
+
+                    parent = parent->getParent();
+                }
             }
 
-            auto voice = findFreeVoice();
             if (voice == nullptr)
+                voice = findFreeVoice();
+
+            if (voice == nullptr) {
+                // OK we're capped, leaving
+                DBG("Polyphony capped, dropping note for " << region->sampleId.filename());
                 continue;
+            }
 
             voice->startVoice(region, delay, noteNumber, velocity, Voice::TriggerType::NoteOn);
             if (firstStartedVoice == nullptr)
@@ -1197,13 +1208,15 @@ void sfz::Synth::resetVoices(int numVoices)
     for (int i = 0; i < numVoices; ++i)
         voices.push_back(absl::make_unique<Voice>(resources));
 
-    voiceViewVector.clear();
-    voiceViewVector.reserve(numVoices);
+    allVoiceViews.clear();
+    allVoiceViews.reserve(numVoices);
+    tempVoiceViews.clear();
+    tempVoiceViews.reserve(numVoices);
 
     for (auto& voice : voices) {
         voice->setSampleRate(this->sampleRate);
         voice->setSamplesPerBlock(this->samplesPerBlock);
-        voiceViewVector.push_back(voice.get());
+        allVoiceViews.push_back(voice.get());
     }
 
     overflowVoices.clear();
