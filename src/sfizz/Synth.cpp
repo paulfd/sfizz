@@ -666,7 +666,6 @@ void sfz::Synth::renderVoiceToOutputs(Voice& voice, AudioSpan<float>& tempSpan) 
             bus->addToInputs(tempSpan, addGain, tempSpan.getNumFrames());
         }
     }
-
 }
 
 void sfz::Synth::renderBlock(AudioSpan<float> buffer) noexcept
@@ -889,21 +888,28 @@ void sfz::Synth::noteOnDispatch(int delay, int noteNumber, float velocity) noexc
 
             if (polyphonyGroupVoices.size()
                 == polyphonyGroups[region->group].getPolyphonyLimit()) {
+                DBG("Stealing a voice due to polyphony groups");
                 voice = stealVoice(polyphonyGroupVoices);
             } else if (tempVoiceViews.size() >= region->polyphony) {
+                DBG("Stealing a voice due to region polyphony");
                 voice = stealVoice(tempVoiceViews);
             } else if (region->notePolyphony && notePolyphonyCounter >= *region->notePolyphony) {
-                if (selfMaskCandidate != nullptr)
+                if (selfMaskCandidate != nullptr) {
+                    DBG("Stealing the self-mask candidate");
                     selfMaskCandidate->release(delay);
-                else // We're the lowest velocity guy here, so we just don't start
+                } else {
+                    DBG("Not starting the voice; masked...");
+                    // We're the lowest velocity guy here, so we just don't start
                     continue;
+                }
             } else {
                 auto parent = region->parent;
-                while (parent != nullptr) {
+                while (parent != nullptr && voice == nullptr) {
                     auto activeVoices = parent->getActiveVoices();
-                    if (activeVoices.size() >= parent->getPolyphonyLimit())
-                        stealVoice(activeVoices);
-
+                    if (activeVoices.size() >= parent->getPolyphonyLimit()) {
+                        DBG("Stealing due to a parent polyphony");
+                        voice = stealVoice(activeVoices);
+                    }
                     parent = parent->getParent();
                 }
             }
@@ -911,11 +917,8 @@ void sfz::Synth::noteOnDispatch(int delay, int noteNumber, float velocity) noexc
             if (voice == nullptr)
                 voice = findFreeVoice();
 
-            if (voice == nullptr) {
-                // OK we're capped, leaving
-                DBG("Polyphony capped, dropping note for " << region->sampleId.filename());
-                continue;
-            }
+            if (voice == nullptr)
+                voice = stealVoice(allVoiceViews);
 
             voice->startVoice(region, delay, noteNumber, velocity, Voice::TriggerType::NoteOn);
             if (firstStartedVoice == nullptr)
