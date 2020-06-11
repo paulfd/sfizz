@@ -9,6 +9,7 @@
 #include "Debug.h"
 #include "Macros.h"
 #include "MidiState.h"
+#include "SisterVoiceRing.h"
 #include "ScopedFTZ.h"
 #include "StringViewHelpers.h"
 #include "pugixml.hpp"
@@ -810,8 +811,7 @@ void sfz::Synth::noteOff(int delay, int noteNumber, uint8_t velocity) noexcept
 void sfz::Synth::noteOffDispatch(int delay, int noteNumber, float velocity) noexcept
 {
     const auto randValue = randNoteDistribution(Random::randomGenerator);
-    Voice* firstStartedVoice { nullptr };
-    Voice* lastStartedVoice { nullptr };
+    SisterVoiceRingBuilder ring;
 
     for (auto& region : noteActivationLists[noteNumber]) {
         if (region->registerNoteOff(noteNumber, velocity, randValue)) {
@@ -820,30 +820,15 @@ void sfz::Synth::noteOffDispatch(int delay, int noteNumber, float velocity) noex
                 continue;
 
             voice->startVoice(region, delay, noteNumber, velocity, Voice::TriggerType::NoteOff);
-            if (firstStartedVoice == nullptr)
-                firstStartedVoice = voice;
-
-            if (lastStartedVoice != nullptr) {
-                voice->setPreviousSisterVoice(lastStartedVoice);
-                lastStartedVoice->setNextSisterVoice(voice);
-            }
-
-            lastStartedVoice = voice;
+            ring.addVoiceToRing(voice);
         }
-    }
-
-    if (lastStartedVoice != nullptr) {
-        ASSERT(firstStartedVoice);
-        lastStartedVoice->setNextSisterVoice(firstStartedVoice);
-        firstStartedVoice->setPreviousSisterVoice(lastStartedVoice);
     }
 }
 
 void sfz::Synth::noteOnDispatch(int delay, int noteNumber, float velocity) noexcept
 {
     const auto randValue = randNoteDistribution(Random::randomGenerator);
-    Voice* firstStartedVoice { nullptr };
-    Voice* lastStartedVoice { nullptr };
+    SisterVoiceRingBuilder ring;
 
     for (auto& region : noteActivationLists[noteNumber]) {
         if (region->registerNoteOn(noteNumber, velocity, randValue)) {
@@ -921,22 +906,8 @@ void sfz::Synth::noteOnDispatch(int delay, int noteNumber, float velocity) noexc
                 voice = stealVoice(allVoiceViews);
 
             voice->startVoice(region, delay, noteNumber, velocity, Voice::TriggerType::NoteOn);
-            if (firstStartedVoice == nullptr)
-                firstStartedVoice = voice;
-
-            if (lastStartedVoice != nullptr) {
-                voice->setPreviousSisterVoice(lastStartedVoice);
-                lastStartedVoice->setNextSisterVoice(voice);
-            }
-
-            lastStartedVoice = voice;
+            ring.addVoiceToRing(voice);
         }
-    }
-
-    if (lastStartedVoice != nullptr) {
-        ASSERT(firstStartedVoice);
-        lastStartedVoice->setNextSisterVoice(firstStartedVoice);
-        firstStartedVoice->setPreviousSisterVoice(lastStartedVoice);
     }
 }
 
