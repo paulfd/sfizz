@@ -829,21 +829,21 @@ void sfz::Synth::noteOnDispatch(int delay, int noteNumber, float velocity) noexc
 {
     const auto randValue = randNoteDistribution(Random::randomGenerator);
     SisterVoiceRingBuilder ring;
+    auto& regionPolyphonyViews = tempVoiceViews;
 
     for (auto& region : noteActivationLists[noteNumber]) {
         if (region->registerNoteOn(noteNumber, velocity, randValue)) {
             unsigned notePolyphonyCounter { 0 };
             Voice* selfMaskCandidate { nullptr };
-            tempVoiceViews.clear();
+            regionPolyphonyViews.clear();
 
             for (auto& voice : voices) {
                 const auto voiceRegion = voice->getRegion();
                 if (voice->isFree() || voiceRegion == nullptr)
                     continue;
 
-                if (voiceRegion == region) {
-                    tempVoiceViews.push_back(voice.get());
-                }
+                if (voiceRegion == region)
+                    regionPolyphonyViews.push_back(voice.get());
 
                 if (region->notePolyphony) {
                     if (voice->getTriggerNumber() == noteNumber && voice->getTriggerType() == Voice::TriggerType::NoteOn) {
@@ -875,9 +875,9 @@ void sfz::Synth::noteOnDispatch(int delay, int noteNumber, float velocity) noexc
                 == polyphonyGroups[region->group].getPolyphonyLimit()) {
                 DBG("Stealing a voice due to polyphony groups");
                 voice = stealVoice(polyphonyGroupVoices);
-            } else if (tempVoiceViews.size() >= region->polyphony) {
+            } else if (regionPolyphonyViews.size() >= region->polyphony) {
                 DBG("Stealing a voice due to region polyphony");
-                voice = stealVoice(tempVoiceViews);
+                voice = stealVoice(regionPolyphonyViews);
             } else if (region->notePolyphony && notePolyphonyCounter >= *region->notePolyphony) {
                 if (selfMaskCandidate != nullptr) {
                     DBG("Stealing the self-mask candidate");
