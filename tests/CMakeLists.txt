@@ -29,6 +29,7 @@ set(SFIZZ_TEST_SOURCES
     RegionTriggersT.cpp
     FloatHelpersT.cpp
     WavetablesT.cpp
+    PolyphonyT.cpp
     SemaphoreT.cpp
 )
 
