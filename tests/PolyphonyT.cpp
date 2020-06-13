@@ -68,7 +68,6 @@ TEST_CASE("[Polyphony] Polyphony groups")
     REQUIRE( synth.getPolyphonyGroupView(4)->getPolyphonyLimit() == 5 );
 }
 
-
 TEST_CASE("[Polyphony] group polyphony limits")
 {
     sfz::Synth synth;
@@ -81,6 +80,107 @@ TEST_CASE("[Polyphony] group polyphony limits")
     synth.noteOn(0, 65, 64);
     REQUIRE(synth.getNumActiveVoices() == 2); // group polyphony should block the last note
 }
+
+TEST_CASE("[Polyphony] Hierarchy polyphony limits")
+{
+    sfz::Synth synth;
+    synth.loadSfzString(fs::current_path(), R"(
+        <group> polyphony=2
+        <region> sample=*sine key=65
+    )");
+    synth.noteOn(0, 65, 64);
+    synth.noteOn(0, 65, 64);
+    synth.noteOn(0, 65, 64);
+    REQUIRE(synth.getNumActiveVoices() == 2);
+}
+
+TEST_CASE("[Polyphony] Hierarchy polyphony limits (group)")
+{
+    sfz::Synth synth;
+    synth.loadSfzString(fs::current_path(), R"(
+        <group> polyphony=2
+        <region> sample=*sine key=65
+    )");
+    synth.noteOn(0, 65, 64);
+    synth.noteOn(0, 65, 64);
+    synth.noteOn(0, 65, 64);
+    REQUIRE(synth.getNumActiveVoices() == 2);
+}
+
+TEST_CASE("[Polyphony] Hierarchy polyphony limits (master)")
+{
+    sfz::Synth synth;
+    synth.loadSfzString(fs::current_path(), R"(
+        <master> polyphony=2
+        <group> polyphony=5
+        <region> sample=*sine key=65
+    )");
+    synth.noteOn(0, 65, 64);
+    synth.noteOn(0, 65, 64);
+    synth.noteOn(0, 65, 64);
+    REQUIRE(synth.getNumActiveVoices() == 2);
+}
+
+TEST_CASE("[Polyphony] Hierarchy polyphony limits (limit in another master)")
+{
+    sfz::Synth synth;
+    synth.loadSfzString(fs::current_path(), R"(
+        <master> polyphony=2
+        <region> sample=*saw key=65
+        <master>
+        <group> polyphony=5
+        <region> sample=*sine key=65
+    )");
+    synth.noteOn(0, 65, 64);
+    synth.noteOn(0, 65, 64);
+    synth.noteOn(0, 65, 64);
+    REQUIRE(synth.getNumActiveVoices() == 5);
+}
+
+TEST_CASE("[Polyphony] Hierarchy polyphony limits (global)")
+{
+    sfz::Synth synth;
+    synth.loadSfzString(fs::current_path(), R"(
+        <global> polyphony=2
+        <group> polyphony=5
+        <region> sample=*sine key=65
+    )");
+    synth.noteOn(0, 65, 64);
+    synth.noteOn(0, 65, 64);
+    synth.noteOn(0, 65, 64);
+    REQUIRE(synth.getNumActiveVoices() == 2);
+}
+
+TEST_CASE("[Polyphony] Polyphony in master")
+{
+    sfz::Synth synth;
+    synth.loadSfzString(fs::current_path(), R"(
+        <master> polyphony=2
+        <group> group=2
+        <region> sample=*sine key=65
+        <group> group=3
+        <region> sample=*sine key=63
+        <master> // Empty master resets the polyphony
+        <region> sample=*sine key=61
+    )");
+    synth.noteOn(0, 65, 64);
+    synth.noteOn(0, 65, 64);
+    synth.noteOn(0, 65, 64);
+    REQUIRE(synth.getNumActiveVoices() == 2); // group polyphony should block the last note
+    synth.allSoundOff();
+    REQUIRE(synth.getNumActiveVoices() == 0);
+    synth.noteOn(0, 63, 64);
+    synth.noteOn(0, 63, 64);
+    synth.noteOn(0, 63, 64);
+    REQUIRE(synth.getNumActiveVoices() == 2); // group polyphony should block the last note
+    synth.allSoundOff();
+    REQUIRE(synth.getNumActiveVoices() == 0);
+    synth.noteOn(0, 61, 64);
+    synth.noteOn(0, 61, 64);
+    synth.noteOn(0, 61, 64);
+    REQUIRE(synth.getNumActiveVoices() == 3);
+}
+
 
 TEST_CASE("[Polyphony] Self-masking")
 {
@@ -116,34 +216,4 @@ TEST_CASE("[Polyphony] Not self-masking")
     REQUIRE(!synth.getVoiceView(1)->releasedOrFree());
     REQUIRE(synth.getVoiceView(2)->getTriggerValue() == 64_norm);
     REQUIRE(!synth.getVoiceView(2)->releasedOrFree());
-}
-
-TEST_CASE("[Polyphony] Polyphony in master")
-{
-    sfz::Synth synth;
-    synth.loadSfzString(fs::current_path(), R"(
-        <master> polyphony=2
-        <group> group=2
-        <region> sample=*sine key=65
-        <group> group=3
-        <region> sample=*sine key=63
-        <master> // Empty master resets the polyphony
-        <region> sample=*sine key=61
-    )");
-    synth.noteOn(0, 65, 64);
-    synth.noteOn(0, 65, 64);
-    synth.noteOn(0, 65, 64);
-    REQUIRE(synth.getNumActiveVoices() == 2); // group polyphony should block the last note
-    synth.allSoundOff();
-    REQUIRE(synth.getNumActiveVoices() == 0);
-    synth.noteOn(0, 63, 64);
-    synth.noteOn(0, 63, 64);
-    synth.noteOn(0, 63, 64);
-    REQUIRE(synth.getNumActiveVoices() == 2); // group polyphony should block the last note
-    synth.allSoundOff();
-    REQUIRE(synth.getNumActiveVoices() == 0);
-    synth.noteOn(0, 61, 64);
-    synth.noteOn(0, 61, 64);
-    synth.noteOn(0, 61, 64);
-    REQUIRE(synth.getNumActiveVoices() == 3);
 }
