@@ -829,6 +829,7 @@ void sfz::Synth::noteOnDispatch(int delay, int noteNumber, float velocity) noexc
 {
     const auto randValue = randNoteDistribution(Random::randomGenerator);
     SisterVoiceRingBuilder ring;
+    VoiceViewVector idRegionVoices;
     auto& regionPolyphonyViews = tempVoiceViews;
 
     for (auto& region : noteActivationLists[noteNumber]) {
@@ -932,8 +933,7 @@ void sfz::Synth::cc(int delay, int ccNumber, uint8_t ccValue) noexcept
     for (auto& voice : voices)
         voice->registerCC(delay, ccNumber, normalizedCC);
 
-    Voice* firstStartedVoice { nullptr };
-    Voice* lastStartedVoice { nullptr };
+    SisterVoiceRingBuilder ring;
 
     for (auto& region : ccActivationLists[ccNumber]) {
         if (region->registerCC(ccNumber, normalizedCC)) {
@@ -942,22 +942,8 @@ void sfz::Synth::cc(int delay, int ccNumber, uint8_t ccValue) noexcept
                 continue;
 
             voice->startVoice(region, delay, ccNumber, normalizedCC, Voice::TriggerType::CC);
-            if (firstStartedVoice == nullptr)
-                firstStartedVoice = voice;
-
-            if (lastStartedVoice != nullptr) {
-                voice->setPreviousSisterVoice(lastStartedVoice);
-                lastStartedVoice->setNextSisterVoice(voice);
-            }
-
-            lastStartedVoice = voice;
+            ring.addVoiceToRing(voice);
         }
-    }
-
-    if (lastStartedVoice != nullptr) {
-        ASSERT(firstStartedVoice);
-        lastStartedVoice->setNextSisterVoice(firstStartedVoice);
-        firstStartedVoice->setPreviousSisterVoice(lastStartedVoice);
     }
 }
 
