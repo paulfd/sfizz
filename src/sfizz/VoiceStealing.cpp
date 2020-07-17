@@ -11,7 +11,7 @@ sfz::Voice* sfz::VoiceStealing::steal(absl::Span<sfz::Voice*> voices) noexcept
     absl::c_sort(voices, voiceOrdering);
 
     const auto sumEnvelope = absl::c_accumulate(voices, 0.0f, [](float sum, const Voice* v) {
-        return sum + v->getAverageEnvelope();
+        return sum + v->getAveragePower();
     });
     // We are checking the envelope to try and kill voices with relative low contribution
     // to the output compared to the rest.
@@ -37,7 +37,7 @@ sfz::Voice* sfz::VoiceStealing::steal(absl::Span<sfz::Voice*> voices) noexcept
 
         float maxEnvelope { 0.0f };
         SisterVoiceRing::applyToRing(ref, [&](Voice* v) {
-            maxEnvelope = max(maxEnvelope, v->getAverageEnvelope());
+            maxEnvelope = max(maxEnvelope, v->getAveragePower());
         });
 
         if (maxEnvelope < envThreshold) {

@@ -769,7 +769,7 @@ void sfz::Voice::removeVoiceFromRing() noexcept
     nextSisterVoice = this;
 }
 
-float sfz::Voice::getAverageEnvelope() const noexcept
+float sfz::Voice::getAveragePower() const noexcept
 {
     return max(smoothedChannelEnvelopes[0], smoothedChannelEnvelopes[1]);
 }
@@ -865,8 +865,8 @@ void sfz::Voice::updateChannelPowers(AudioSpan<float> buffer)
     for (unsigned i = 0; i < smoothedChannelEnvelopes.size(); ++i) {
         const auto input = buffer.getConstSpan(i);
         for (unsigned s = 0; s < buffer.getNumFrames(); ++s)
-            smoothedChannelEnvelopes[i] =
-                channelEnvelopeFilters[i].tickLowpass(std::abs(input[s]));
+            channelEnvelopeFilters[i].tickLowpass(input[s] * input[s]);
+        smoothedChannelEnvelopes[i] = channelEnvelopeFilters[i].current();
     }
 }
 

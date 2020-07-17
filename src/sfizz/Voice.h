@@ -257,7 +257,7 @@ public:
      *
      * @return float
      */
-    float getAverageEnvelope() const noexcept;
+    float getAveragePower() const noexcept;
     /**
      * @brief Get the position of the voice in the source, in samples
      *
