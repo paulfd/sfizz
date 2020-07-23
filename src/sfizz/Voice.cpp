@@ -213,7 +213,6 @@ void sfz::Voice::registerNoteOff(int delay, int noteNumber, float velocity) noex
 
 void sfz::Voice::registerCC(int delay, int ccNumber, float ccValue) noexcept
 {
-    ASSERT(ccValue >= 0.0 && ccValue <= 1.0);
     if (region == nullptr)
         return;
 

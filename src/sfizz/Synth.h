@@ -731,10 +731,13 @@ private:
     float sampleRate { config::defaultSampleRate };
     float volume { Default::globalVolume };
     int numVoices { config::numVoices };
+    bool alternateState { false };
     Oversampling oversamplingFactor { config::defaultOversamplingFactor };
 
     // Distribution used to generate random value for the *rand opcodes
     std::uniform_real_distribution<float> randNoteDistribution { 0, 1 };
+    fast_real_distribution<float> unipolarDistribution { 0.0f, 1.0f };
+    fast_real_distribution<float> bipolarDistribution { -1.0f, 1.0f };
 
     std::mutex callbackGuard;
 

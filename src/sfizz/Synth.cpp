@@ -767,6 +767,9 @@ void sfz::Synth::renderBlock(AudioSpan<float> buffer) noexcept
     { // Clear events and advance midi time
         ScopedTiming logger { dispatchDuration, ScopedTiming::Operation::addToDuration };
         resources.midiState.advanceTime(buffer.getNumFrames());
+
+        hdcc(0, 135, unipolarDistribution(Random::randomGenerator));
+        hdcc(0, 136, bipolarDistribution(Random::randomGenerator));
     }
 
     callbackBreakdown.dispatch = dispatchDuration;
@@ -796,6 +799,14 @@ void sfz::Synth::noteOn(int delay, int noteNumber, uint8_t velocity) noexcept
     const auto normalizedVelocity = normalizeVelocity(velocity);
     ScopedTiming logger { dispatchDuration, ScopedTiming::Operation::addToDuration };
     resources.midiState.noteOnEvent(delay, noteNumber, normalizedVelocity);
+    hdcc(delay, 131, normalizedVelocity);
+    hdcc(delay, 133, static_cast<float>(noteNumber));
+    alternateState = !alternateState;
+    hdcc(delay, 137, static_cast<float>(alternateState));
+    if (resources.midiState.getActiveNotes() == 1)
+        hdcc(delay, 134, 1.0f);
+
+
 
     const std::unique_lock<std::mutex> lock { callbackGuard, std::try_to_lock };
     if (!lock.owns_lock())
@@ -812,6 +823,10 @@ void sfz::Synth::noteOff(int delay, int noteNumber, uint8_t velocity) noexcept
     const auto normalizedVelocity = normalizeVelocity(velocity);
     ScopedTiming logger { dispatchDuration, ScopedTiming::Operation::addToDuration };
     resources.midiState.noteOffEvent(delay, noteNumber, normalizedVelocity);
+    hdcc(delay, 132, normalizedVelocity);
+    hdcc(delay, 133, static_cast<float>(noteNumber));
+    if (resources.midiState.getActiveNotes() == 0)
+        hdcc(delay, 134, 0.0f);
 
     const std::unique_lock<std::mutex> lock { callbackGuard, std::try_to_lock };
     if (!lock.owns_lock())
@@ -1016,6 +1031,7 @@ void sfz::Synth::pitchWheel(int delay, int pitch) noexcept
 
     ScopedTiming logger { dispatchDuration, ScopedTiming::Operation::addToDuration };
     resources.midiState.pitchBendEvent(delay, normalizedPitch);
+    hdcc(delay, 128, normalizedPitch);
 
     for (auto& region : regions) {
         region->registerPitchWheel(normalizedPitch);
@@ -1025,13 +1041,17 @@ void sfz::Synth::pitchWheel(int delay, int pitch) noexcept
         voice->registerPitchWheel(delay, normalizedPitch);
     }
 }
-void sfz::Synth::aftertouch(int /* delay */, uint8_t /* aftertouch */) noexcept
+void sfz::Synth::aftertouch(int delay, uint8_t aftertouch) noexcept
 {
     ScopedTiming logger { dispatchDuration, ScopedTiming::Operation::addToDuration };
+    const auto normalizedValue = normalize7Bits(aftertouch);
+    hdcc(delay, 129, normalizedValue);
 }
-void sfz::Synth::tempo(int /* delay */, float /* secondsPerQuarter */) noexcept
+void sfz::Synth::tempo(int delay, float secondsPerQuarter) noexcept
 {
     ScopedTiming logger { dispatchDuration, ScopedTiming::Operation::addToDuration };
+    const auto bpm = 60.0f / secondsPerQuarter;
+    hdcc(delay, 142, bpm);
 }
 
 int sfz::Synth::getNumRegions() const noexcept
