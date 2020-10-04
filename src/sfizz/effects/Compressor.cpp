@@ -191,7 +191,7 @@ namespace fx {
                     impl._inputGain = db2mag(*value);
                 break;
             case hash("comp_stlink"):
-                if (auto value = readBooleanFromOpcode(opc))
+                if (auto value = readBooleanOpcode(opc))
                     impl._stlink = *value;
                 break;
             }

@@ -160,7 +160,7 @@ absl::optional<uint8_t> readNoteValue(absl::string_view value)
 
 ///
 template <typename ValueType, absl::enable_if_t<std::is_integral<ValueType>::value, int>>
-absl::optional<ValueType> readOpcode(absl::string_view value, const Range<ValueType>& validRange)
+absl::optional<ValueType> readOpcode(absl::string_view value)
 {
     size_t numberEnd = 0;
 
@@ -180,11 +180,11 @@ absl::optional<ValueType> readOpcode(absl::string_view value, const Range<ValueT
     if (returnedValue < std::numeric_limits<ValueType>::min())
         returnedValue = std::numeric_limits<ValueType>::min();
 
-    return validRange.clamp(static_cast<ValueType>(returnedValue));
+    return returnedValue;
 }
 
 template <typename ValueType, absl::enable_if_t<std::is_floating_point<ValueType>::value, int>>
-absl::optional<ValueType> readOpcode(absl::string_view value, const Range<ValueType>& validRange)
+absl::optional<ValueType> readOpcode(absl::string_view value)
 {
     size_t numberEnd = 0;
 
@@ -205,13 +205,13 @@ absl::optional<ValueType> readOpcode(absl::string_view value, const Range<ValueT
     if (!absl::SimpleAtof(value, &returnedValue))
         return absl::nullopt;
 
-    return validRange.clamp(returnedValue);
+    return returnedValue;
 }
 
-absl::optional<bool> readBooleanFromOpcode(const Opcode& opcode)
+absl::optional<bool> readBooleanOpcode(const Opcode& opcode)
 {
     switch (hash(opcode.value)) {
-    case hash("off"):
+    case hash("off"): // fallthrough
         return false;
     case hash("on"):
         return true;
@@ -220,64 +220,29 @@ absl::optional<bool> readBooleanFromOpcode(const Opcode& opcode)
     }
 }
 
-template <class ValueType>
-void setValueFromOpcode(const Opcode& opcode, ValueType& target, const Range<ValueType>& validRange)
+template<typename ValueType>
+absl::optional<ValueType> readNoteOpcode(absl::string_view value)
 {
-    auto value = readOpcode(opcode.value, validRange);
-    if (!value) // Try and read a note rather than a number
-        value = readNoteValue(opcode.value);
-    if (value)
-        target = *value;
+    auto value = readOpcode(opcode.value);
+    if (!value)
+        value = readNoteValue(value);
+
+    return value;
 }
 
-template <class ValueType>
-inline void setValueFromOpcode(const Opcode& opcode, absl::optional<ValueType>& target, const Range<ValueType>& validRange)
+template<typename ValueType>
+absl::optional<ValueType> readPositiveOpcode(absl::string_view value)
 {
-    auto value = readOpcode(opcode.value, validRange);
-    if (!value) // Try and read a note rather than a number
-        value = readNoteValue(opcode.value);
-    if (value)
-        target = *value;
-}
+    auto value = readOpcode(opcode.value);
+    if (value && *value >= ValueType { 0 })
+        return value;
 
-template <class ValueType>
-void setRangeEndFromOpcode(const Opcode& opcode, Range<ValueType>& target, const Range<ValueType>& validRange)
-{
-    auto value = readOpcode(opcode.value, validRange);
-    if (!value) // Try and read a note rather than a number
-        value = readNoteValue(opcode.value);
-    if (value)
-        target.setEnd(*value);
-}
-
-template <class ValueType>
-void setRangeStartFromOpcode(const Opcode& opcode, Range<ValueType>& target, const Range<ValueType>& validRange)
-{
-    auto value = readOpcode(opcode.value, validRange);
-    if (!value) // Try and read a note rather than a number
-        value = readNoteValue(opcode.value);
-    if (value)
-        target.setStart(*value);
-}
-
-template <class ValueType>
-void setCCPairFromOpcode(const Opcode& opcode, absl::optional<CCData<ValueType>>& target, const Range<ValueType>& validRange)
-{
-    auto value = readOpcode(opcode.value, validRange);
-    if (value && Default::ccNumberRange.containsWithEnd(opcode.parameters.back()))
-        target = { opcode.parameters.back(), *value };
-    else
-        target = {};
+    return {};
 }
 
 ///
 #define INSTANCIATE_FOR(T) \
-    template absl::optional<T> readOpcode<T>(absl::string_view value, const Range<T>& validRange); /*NOLINT(bugprone-macro-parentheses)*/ \
-    template void setValueFromOpcode<T>(const Opcode& opcode, T& target, const Range<T>& validRange); /*NOLINT(bugprone-macro-parentheses)*/ \
-    template void setValueFromOpcode<T>(const Opcode& opcode, absl::optional<T>& target, const Range<T>& validRange); /*NOLINT(bugprone-macro-parentheses)*/ \
-    template void setRangeEndFromOpcode(const Opcode& opcode, Range<T>& target, const Range<T>& validRange); /*NOLINT(bugprone-macro-parentheses)*/ \
-    template void setRangeStartFromOpcode(const Opcode& opcode, Range<T>& target, const Range<T>& validRange); /*NOLINT(bugprone-macro-parentheses)*/ \
-    template void setCCPairFromOpcode(const Opcode& opcode, absl::optional<CCData<T>>& target, const Range<T>& validRange); /*NOLINT(bugprone-macro-parentheses)*/
+    template absl::optional<T> readOpcode<T>(absl::string_view value); /*NOLINT(bugprone-macro-parentheses)*/ \
 
 INSTANCIATE_FOR(float)
 INSTANCIATE_FOR(double)

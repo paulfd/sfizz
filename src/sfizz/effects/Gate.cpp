@@ -190,7 +190,7 @@ namespace fx {
                 }
                 break;
             case hash("gate_stlink"):
-                if (auto value = readBooleanFromOpcode(opc))
+                if (auto value = readBooleanOpcode(opc))
                     impl._stlink = *value;
                 break;
             }

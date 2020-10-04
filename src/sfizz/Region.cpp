@@ -80,10 +80,11 @@ bool sfz::Region::parseOpcode(const Opcode& rawOpcode)
         break;
     case hash("sample_quality"):
         {
-            if (opcode.value == "-1")
+            if (opcode.value == "-1") {
                 sampleQuality.reset();
-            else
-                setValueFromOpcode(opcode, sampleQuality, Default::sampleQualityRange);
+            } else {
+                sampleQuality = readPositiveOpcode<int>(opcode.value).value_or(sampleQuality);
+            }
             break;
         }
         break;
@@ -91,10 +92,11 @@ bool sfz::Region::parseOpcode(const Opcode& rawOpcode)
         sampleId = sampleId.reversed(opcode.value == "reverse");
         break;
     case hash("delay"):
-        setValueFromOpcode(opcode, delay, Default::delayRange);
+        if (auto value = readPositiveOpcode<float>(opcode.value))
+
         break;
     case hash("delay_random"):
-        setValueFromOpcode(opcode, delayRandom, Default::delayRange);
+        delayRandom = readPositiveOpcode<decltype(delayRandom)>(opcode.value).value_or(delayRandom);
         break;
     case hash("offset"):
         setValueFromOpcode(opcode, offset, Default::offsetRange);
@@ -105,7 +107,7 @@ bool sfz::Region::parseOpcode(const Opcode& rawOpcode)
     case hash("offset_oncc&"): // also offset_cc&
         if (opcode.parameters.back() > config::numCCs)
             return false;
-        if (auto value = readOpcode(opcode.value, Default::offsetCCRange))
+        if (auto value = readOpcode<int64_t>(opcode.value))
             offsetCC[opcode.parameters.back()] = *value;
         break;
     case hash("end"):
@@ -144,7 +146,7 @@ bool sfz::Region::parseOpcode(const Opcode& rawOpcode)
         setValueFromOpcode(opcode, oscillatorPhase, Default::oscillatorPhaseRange);
         break;
     case hash("oscillator"):
-        if (auto value = readBooleanFromOpcode(opcode))
+        if (auto value = readBooleanOpcode(opcode))
             oscillatorEnabled = *value ? OscillatorEnabled::On : OscillatorEnabled::Off;
         break;
     case hash("oscillator_mode"):
@@ -334,10 +336,10 @@ bool sfz::Region::parseOpcode(const Opcode& rawOpcode)
         }
         break;
     case hash("sustain_sw"):
-        checkSustain = readBooleanFromOpcode(opcode).value_or(Default::checkSustain);
+        checkSustain = readBooleanOpcode(opcode).value_or(Default::checkSustain);
         break;
     case hash("sostenuto_sw"):
-        checkSostenuto = readBooleanFromOpcode(opcode).value_or(Default::checkSostenuto);
+        checkSostenuto = readBooleanOpcode(opcode).value_or(Default::checkSostenuto);
         break;
     // Region logic: internal conditions
     case hash("lochanaft"):
