@@ -101,6 +101,22 @@ struct Opcode {
             category == kOpcodeStepCcN || category == kOpcodeSmoothCcN;
     }
 
+    template <typename T>
+    absl::optional<T> readClamped(const Range<T>& validRange) const;
+
+    template <typename T, absl::enable_if_t<std::is_integral<T>::value, int> = 0>
+    absl::optional<T> read() const;
+
+    template <typename T, absl::enable_if_t<std::is_floating_point<T>::value, int> = 0>
+    absl::optional<T> read() const;
+
+    absl::optional<bool> readBoolean() const;
+
+    absl::optional<uint8_t> readNote() const;
+
+    template <typename T>
+    absl::optional<T> readPositive() const;
+
 private:
     static OpcodeCategory identifyCategory(absl::string_view name);
     LEAK_DETECTOR(Opcode);

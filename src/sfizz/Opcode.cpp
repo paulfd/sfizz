@@ -158,6 +158,108 @@ absl::optional<uint8_t> readNoteValue(absl::string_view value)
     return static_cast<uint8_t>(noteNumber);
 }
 
+template <typename T, absl::enable_if_t<std::is_integral<T>::value, int>>
+absl::optional<T> Opcode::read() const
+{
+    size_t numberEnd = 0;
+    absl::string_view v { value };
+
+    if (numberEnd < v.size() && (v[numberEnd] == '+' || v[numberEnd] == '-'))
+        ++numberEnd;
+    while (numberEnd < v.size() && absl::ascii_isdigit(v[numberEnd]))
+        ++numberEnd;
+
+    v = v.substr(0, numberEnd);
+
+    int64_t returnedValue;
+    if (!absl::SimpleAtoi(v, &returnedValue))
+            return absl::nullopt;
+
+    if (returnedValue > std::numeric_limits<T>::max())
+        returnedValue = std::numeric_limits<T>::max();
+    if (returnedValue < std::numeric_limits<T>::min())
+        returnedValue = std::numeric_limits<T>::min();
+
+    return static_cast<T>(returnedValue);
+}
+
+template <typename T, absl::enable_if_t<std::is_floating_point<T>::value, int>>
+absl::optional<T> Opcode::read() const
+{
+    size_t numberEnd = 0;
+    absl::string_view v { value };
+
+    if (numberEnd < v.size() && (v[numberEnd] == '+' || v[numberEnd] == '-'))
+        ++numberEnd;
+    while (numberEnd < v.size() && absl::ascii_isdigit(v[numberEnd]))
+        ++numberEnd;
+
+    if (numberEnd < v.size() && v[numberEnd] == '.') {
+        ++numberEnd;
+        while (numberEnd < v.size() && absl::ascii_isdigit(v[numberEnd]))
+            ++numberEnd;
+    }
+
+    v = v.substr(0, numberEnd);
+
+    float returnedValue;
+    if (!absl::SimpleAtof(v, &returnedValue))
+        return absl::nullopt;
+
+    return returnedValue;
+}
+
+template <typename T>
+absl::optional<T> Opcode::readClamped(const Range<T>& validRange) const
+{
+    auto returnedValue = read<T>();
+    if (returnedValue)
+        return validRange.clamp(*returnedValue);
+
+    return {};
+}
+
+template <typename T>
+absl::optional<T> Opcode::readPositive() const
+{
+    auto returnedValue = read<T>();
+    if (returnedValue && *returnedValue >= T { 0 })
+        return *returnedValue;
+
+    return {};
+}
+
+absl::optional<bool> Opcode::readBoolean() const
+{
+    // Cakewalk-style booleans, case-insensitive
+    if (absl::EqualsIgnoreCase(value, "off"))
+        return false;
+    if (absl::EqualsIgnoreCase(value, "on"))
+        return true;
+
+    // ARIA-style booleans? (seen in egN_dynamic=1 for example)
+    // TODO check this
+    if (auto value = read<int64_t>())
+        return *value != 0;
+
+    return absl::nullopt;
+}
+
+absl::optional<uint8_t> Opcode::readNote() const
+{
+    if (value.length() == 0)
+        return {};
+
+    if (!absl::ascii_isdigit(value[0]))
+        return readNoteValue(value);
+
+    if (auto v = read<uint8_t>())
+        if (Default::keyRange.containsWithEnd(*v))
+            return *v;
+
+    return {};
+}
+
 ///
 template <typename ValueType, absl::enable_if_t<std::is_integral<ValueType>::value, int>>
 absl::optional<ValueType> readOpcode(absl::string_view value, const Range<ValueType>& validRange)
@@ -276,6 +378,9 @@ void setCCPairFromOpcode(const Opcode& opcode, absl::optional<CCData<ValueType>>
 
 ///
 #define INSTANCIATE_FOR(T) \
+    template absl::optional<T> Opcode::read<T>() const; /*NOLINT(bugprone-macro-parentheses)*/ \
+    template absl::optional<T> Opcode::readClamped<T>(const Range<T>& validRange) const; /*NOLINT(bugprone-macro-parentheses)*/ \
+    template absl::optional<T> Opcode::readPositive<T>() const; /*NOLINT(bugprone-macro-parentheses)*/ \
     template absl::optional<T> readOpcode<T>(absl::string_view value, const Range<T>& validRange); /*NOLINT(bugprone-macro-parentheses)*/ \
     template void setValueFromOpcode<T>(const Opcode& opcode, T& target, const Range<T>& validRange); /*NOLINT(bugprone-macro-parentheses)*/ \
     template void setValueFromOpcode<T>(const Opcode& opcode, absl::optional<T>& target, const Range<T>& validRange); /*NOLINT(bugprone-macro-parentheses)*/ \

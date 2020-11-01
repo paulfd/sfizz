@@ -91,28 +91,34 @@ bool sfz::Region::parseOpcode(const Opcode& rawOpcode)
         *sampleId = sampleId->reversed(opcode.value == "reverse");
         break;
     case hash("delay"):
-        setValueFromOpcode(opcode, delay, Default::delayRange);
+        if (auto value = opcode.readPositive<decltype(delay)>())
+            delay = *value;
         break;
     case hash("delay_random"):
-        setValueFromOpcode(opcode, delayRandom, Default::delayRange);
+        if (auto value = opcode.readPositive<decltype(delayRandom)>())
+            delayRandom = *value;
         break;
     case hash("offset"):
-        setValueFromOpcode(opcode, offset, Default::offsetRange);
+        if (auto value = opcode.readPositive<decltype(offset)>())
+            offset = *value;
         break;
     case hash("offset_random"):
-        setValueFromOpcode(opcode, offsetRandom, Default::offsetRange);
+        if (auto value = opcode.readPositive<decltype(offsetRandom)>())
+            offsetRandom = *value;
         break;
     case hash("offset_oncc&"): // also offset_cc&
         if (opcode.parameters.back() > config::numCCs)
             return false;
-        if (auto value = readOpcode(opcode.value, Default::offsetCCRange))
+        if (auto value = opcode.readPositive<decltype(offset)>())
             offsetCC[opcode.parameters.back()] = *value;
         break;
     case hash("end"):
-        setValueFromOpcode(opcode, sampleEnd, Default::sampleEndRange);
+        if (auto value = opcode.readPositive<decltype(sampleEnd)>())
+            sampleEnd = *value;
         break;
     case hash("count"):
-        setValueFromOpcode(opcode, sampleCount, Default::sampleCountRange);
+        if (auto value = opcode.readPositive<decltype(sampleCount)::value_type>())
+            sampleCount = *value;
         break;
     case hash("loop_mode"): // also loopmode
         switch (hash(opcode.value)) {
@@ -133,13 +139,16 @@ bool sfz::Region::parseOpcode(const Opcode& rawOpcode)
         }
         break;
     case hash("loop_end"): // also loopend
-        setRangeEndFromOpcode(opcode, loopRange, Default::loopRange);
+        if (auto value = opcode.readPositive<decltype(sampleEnd)>())
+            loopRange.setEnd(*value);
         break;
     case hash("loop_start"): // also loopstart
-        setRangeStartFromOpcode(opcode, loopRange, Default::loopRange);
+        if (auto value = opcode.readPositive<decltype(sampleEnd)>())
+            loopRange.setStart(*value);
         break;
     case hash("loop_crossfade"):
-        setValueFromOpcode(opcode, loopCrossfade, Default::loopCrossfadeRange);
+        if (auto value = opcode.readPositive<decltype(loopCrossfade)>())
+            loopCrossfade = *value;
         break;
 
     // Wavetable oscillator
