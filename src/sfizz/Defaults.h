@@ -43,19 +43,19 @@ namespace Default
     // The categories match http://sfzformat.com/
     // ******* SFZ 1 *******
     // Sound source: sample playback
-	constexpr float delay { 0.0 };
-	constexpr float delayRandom { 0.0 };
-	constexpr Range<float> delayRange { 0.0, 100.0 };
-	constexpr int64_t offset { 0 };
-	constexpr int64_t offsetRandom { 0 };
-	constexpr Range<int64_t> offsetRange { 0, std::numeric_limits<uint32_t>::max() };
-	constexpr Range<int64_t> offsetCCRange = offsetRange;
-	constexpr Range<uint32_t> sampleEndRange { 0, std::numeric_limits<uint32_t>::max() };
-	constexpr Range<uint32_t> sampleCountRange { 0, std::numeric_limits<uint32_t>::max() };
-	constexpr SfzLoopMode loopMode { SfzLoopMode::no_loop };
-	constexpr Range<uint32_t> loopRange { 0, std::numeric_limits<uint32_t>::max() };
-	constexpr float loopCrossfade { 1e-3 };
-	constexpr Range<float> loopCrossfadeRange { loopCrossfade, 1.0 };
+    constexpr float delay { 0.0 };
+    constexpr float delayRandom { 0.0 };
+    constexpr Range<float> delayRange { 0.0, 100.0 };
+    constexpr int64_t offset { 0 };
+    constexpr int64_t offsetRandom { 0 };
+    constexpr Range<int64_t> offsetRange { 0, std::numeric_limits<uint32_t>::max() };
+    constexpr Range<int64_t> offsetCCRange = offsetRange;
+    constexpr Range<uint32_t> sampleEndRange { 0, std::numeric_limits<uint32_t>::max() };
+    constexpr Range<uint32_t> sampleCountRange { 0, std::numeric_limits<uint32_t>::max() };
+    constexpr SfzLoopMode loopMode { SfzLoopMode::no_loop };
+    constexpr Range<uint32_t> loopRange { 0, std::numeric_limits<uint32_t>::max() };
+    constexpr float loopCrossfade { 1e-3 };
+    constexpr Range<float> loopCrossfadeRange { loopCrossfade, 1.0 };
 
     // common defaults
     constexpr Range<uint8_t> midi7Range { 0, 127 };
@@ -80,20 +80,20 @@ namespace Default
     constexpr Range<int> oscillatorQualityRange { 0, 3 };
 
     // Instrument setting: voice lifecycle
-	constexpr uint32_t group { 0 };
-	constexpr Range<uint32_t> groupRange { 0, std::numeric_limits<uint32_t>::max() };
-	constexpr SfzOffMode offMode { SfzOffMode::fast };
-	constexpr float offTime { 6e-3f };
+    constexpr uint32_t group { 0 };
+    constexpr Range<uint32_t> groupRange { 0, std::numeric_limits<uint32_t>::max() };
+    constexpr SfzOffMode offMode { SfzOffMode::fast };
+    constexpr float offTime { 6e-3f };
     constexpr Range<uint32_t> polyphonyRange { 0, config::maxVoices };
     constexpr SfzSelfMask selfMask { SfzSelfMask::mask };
 
         // Region logic: key mapping
-	constexpr Range<uint8_t> keyRange { 0, 127 };
+    constexpr Range<uint8_t> keyRange { 0, 127 };
     constexpr auto velocityRange = normalizedRange;
 
         // Region logic: MIDI conditions
-	constexpr Range<uint8_t> channelRange { 1, 16 };
-	constexpr Range<uint8_t> midiChannelRange { 0, 15 };
+    constexpr Range<uint8_t> channelRange { 1, 16 };
+    constexpr Range<uint8_t> midiChannelRange { 0, 15 };
     constexpr Range<uint8_t> smoothCCRange { 0, 100 };
     constexpr float smoothTauPerStep { 3e-3 };
     constexpr Range<uint8_t> curveCCRange { 0, 255 };
@@ -102,58 +102,58 @@ namespace Default
     constexpr Range<int> bendRange = { -8192, 8192 };
     constexpr Range<float> bendValueRange = symmetricNormalizedRange;
     constexpr int bend { 0 };
-	constexpr SfzVelocityOverride velocityOverride { SfzVelocityOverride::current };
+    constexpr SfzVelocityOverride velocityOverride { SfzVelocityOverride::current };
 
     // Region logic: internal conditions
-	constexpr Range<float> randRange { 0.0, 1.0 };
-	constexpr Range<uint8_t> aftertouchRange { 0, 127 };
-	constexpr uint8_t aftertouch { 0 };
-	constexpr Range<float> bpmRange { 0.0, 500.0 };
-	constexpr float bpm { 120.0 };
-	constexpr uint8_t sequenceLength{ 1 };
-	constexpr uint8_t sequencePosition{ 1 };
-	constexpr Range<uint8_t> sequenceRange { 1, 100 };
+    constexpr Range<float> randRange { 0.0, 1.0 };
+    constexpr Range<uint8_t> aftertouchRange { 0, 127 };
+    constexpr uint8_t aftertouch { 0 };
+    constexpr Range<float> bpmRange { 0.0, 500.0 };
+    constexpr float bpm { 120.0 };
+    constexpr uint8_t sequenceLength{ 1 };
+    constexpr uint8_t sequencePosition{ 1 };
+    constexpr Range<uint8_t> sequenceRange { 1, 100 };
 
     // Region logic: Triggers
-	constexpr SfzTrigger trigger { SfzTrigger::attack };
+    constexpr SfzTrigger trigger { SfzTrigger::attack };
         constexpr Range<float> ccTriggerValueRange = normalizedRange;
 
         // Performance parameters: amplifier
-	constexpr float globalVolume { -7.35f };
-	constexpr float volume { 0.0f };
-	constexpr Range<float> volumeRange { -144.0, 48.0 };
-	constexpr Range<float> volumeCCRange { -144.0, 48.0 };
-	constexpr float amplitude { 100.0 };
-	constexpr Range<float> amplitudeRange { 0.0, 1e8 };
-	constexpr float pan { 0.0 };
-	constexpr Range<float> panRange { -100.0, 100.0 };
-	constexpr Range<float> panCCRange { -200.0, 200.0 };
-	constexpr float position { 0.0 };
-	constexpr Range<float> positionRange { -100.0, 100.0 };
-	constexpr Range<float> positionCCRange { -200.0, 200.0 };
-	constexpr float width { 100.0 };
-	constexpr Range<float> widthRange { -100.0, 100.0 };
-	constexpr Range<float> widthCCRange { -200.0, 200.0 };
-	constexpr uint8_t ampKeycenter { 60 };
-	constexpr float ampKeytrack { 0.0 };
-	constexpr Range<float> ampKeytrackRange { -96, 12 };
-	constexpr float ampVeltrack { 100.0 };
-	constexpr Range<float> ampVeltrackRange { -100.0, 100.0 };
-	constexpr Range<float> ampVelcurveRange { 0.0, 1.0 };
-	constexpr float ampRandom { 0.0 };
-	constexpr Range<float> ampRandomRange { 0.0, 24.0 };
-	constexpr Range<uint8_t> crossfadeKeyInRange { 0, 0 };
-	constexpr Range<uint8_t> crossfadeKeyOutRange { 127, 127 };
+    constexpr float globalVolume { -7.35f };
+    constexpr float volume { 0.0f };
+    constexpr Range<float> volumeRange { -144.0, 48.0 };
+    constexpr Range<float> volumeCCRange { -144.0, 48.0 };
+    constexpr float amplitude { 100.0 };
+    constexpr Range<float> amplitudeRange { 0.0, 1e8 };
+    constexpr float pan { 0.0 };
+    constexpr Range<float> panRange { -100.0, 100.0 };
+    constexpr Range<float> panCCRange { -200.0, 200.0 };
+    constexpr float position { 0.0 };
+    constexpr Range<float> positionRange { -100.0, 100.0 };
+    constexpr Range<float> positionCCRange { -200.0, 200.0 };
+    constexpr float width { 100.0 };
+    constexpr Range<float> widthRange { -100.0, 100.0 };
+    constexpr Range<float> widthCCRange { -200.0, 200.0 };
+    constexpr uint8_t ampKeycenter { 60 };
+    constexpr float ampKeytrack { 0.0 };
+    constexpr Range<float> ampKeytrackRange { -96, 12 };
+    constexpr float ampVeltrack { 100.0 };
+    constexpr Range<float> ampVeltrackRange { -100.0, 100.0 };
+    constexpr Range<float> ampVelcurveRange { 0.0, 1.0 };
+    constexpr float ampRandom { 0.0 };
+    constexpr Range<float> ampRandomRange { 0.0, 24.0 };
+    constexpr Range<uint8_t> crossfadeKeyInRange { 0, 0 };
+    constexpr Range<uint8_t> crossfadeKeyOutRange { 127, 127 };
     constexpr Range<float> crossfadeVelInRange { 0.0f, 0.0f };
     constexpr Range<float> crossfadeVelOutRange { 1.0f, 1.0f };
     constexpr Range<float> crossfadeCCInRange { 0.0f, 0.0f };
     constexpr Range<float> crossfadeCCOutRange { 1.0f, 1.0f };
     constexpr SfzCrossfadeCurve crossfadeKeyCurve { SfzCrossfadeCurve::power };
-	constexpr SfzCrossfadeCurve crossfadeVelCurve { SfzCrossfadeCurve::power };
-	constexpr SfzCrossfadeCurve crossfadeCCCurve { SfzCrossfadeCurve::power };
-	constexpr float rtDecay { 0.0f };
-	constexpr bool rtDead { false };
-	constexpr Range<float> rtDecayRange { 0.0f, 200.0f };
+    constexpr SfzCrossfadeCurve crossfadeVelCurve { SfzCrossfadeCurve::power };
+    constexpr SfzCrossfadeCurve crossfadeCCCurve { SfzCrossfadeCurve::power };
+    constexpr float rtDecay { 0.0f };
+    constexpr bool rtDead { false };
+    constexpr Range<float> rtDecayRange { 0.0f, 200.0f };
 
     // Performance parameters: Filters
     constexpr int numFilters { 2 };
@@ -197,18 +197,18 @@ namespace Default
     constexpr Range<float> eqGainRange { -96.0f, 96.0f };
     constexpr Range<float> eqGainModRange { -96.0f, 96.0f };
 
-     // Performance parameters: pitch
-	constexpr uint8_t pitchKeycenter { 60 };
-	constexpr int pitchKeytrack { 100 };
-	constexpr Range<int> pitchKeytrackRange { -1200, 1200 };
-	constexpr float pitchRandom { 0 };
-	constexpr Range<float> pitchRandomRange { 0, 12000 };
-	constexpr int pitchVeltrack { 0 };
-	constexpr Range<int> pitchVeltrackRange { -12000, 12000 };
-	constexpr int transpose { 0 };
-	constexpr Range<int> transposeRange { -127, 127 };
-	constexpr int tune { 0 };
-	constexpr Range<int> tuneRange { -12000, 12000 }; // ±100 in SFZv1, more in ARIA
+        // Performance parameters: pitch
+    constexpr uint8_t pitchKeycenter { 60 };
+    constexpr int pitchKeytrack { 100 };
+    constexpr Range<int> pitchKeytrackRange { -1200, 1200 };
+    constexpr float pitchRandom { 0 };
+    constexpr Range<float> pitchRandomRange { 0, 12000 };
+    constexpr int pitchVeltrack { 0 };
+    constexpr Range<int> pitchVeltrackRange { -12000, 12000 };
+    constexpr int transpose { 0 };
+    constexpr Range<int> transposeRange { -127, 127 };
+    constexpr int tune { 0 };
+    constexpr Range<int> tuneRange { -12000, 12000 }; // ±100 in SFZv1, more in ARIA
     constexpr Range<float> tuneCCRange { -12000, 12000 };
     constexpr Range<int> bendBoundRange { -12000, 12000 };
     constexpr Range<int> bendStepRange { 1, 1200 };
@@ -217,7 +217,7 @@ namespace Default
     constexpr int bendStep { 1 };
     constexpr uint8_t bendSmooth { 0 };
 
-     // Modulation: LFO
+        // Modulation: LFO
     constexpr int numLFOs { 4 };
     constexpr int numLFOSubs { 2 };
     constexpr int numLFOSteps { 8 };
@@ -234,26 +234,26 @@ namespace Default
     constexpr Range<float> lfoScaleRange { 0.0, 1.0 };
 
     // Envelope generators
-	constexpr float attack { 0 };
-	constexpr float decay { 0 };
-	constexpr float delayEG { 0 };
-	constexpr float hold { 0 };
-	constexpr float release { 0 };
-	constexpr float ampegRelease { 0.001 }; // Default release to avoid clicks
-	constexpr float vel2release { 0.0f };
-	constexpr float start { 0.0 };
-	constexpr float sustain { 100.0 };
+    constexpr float attack { 0 };
+    constexpr float decay { 0 };
+    constexpr float delayEG { 0 };
+    constexpr float hold { 0 };
+    constexpr float release { 0 };
+    constexpr float ampegRelease { 0.001 }; // Default release to avoid clicks
+    constexpr float vel2release { 0.0f };
+    constexpr float start { 0.0 };
+    constexpr float sustain { 100.0 };
     constexpr uint16_t sustainCC { 64 };
     constexpr float sustainThreshold { 0.0039f }; // sforzando default (0.5f/127.0f)
-	constexpr float vel2sustain { 0.0 };
-	constexpr int depth { 0 };
-	constexpr Range<float> egTimeRange { 0.0, 100.0 };
-	constexpr Range<float> egPercentRange { 0.0, 100.0 };
-	constexpr Range<int> egDepthRange { -12000, 12000 };
-	constexpr Range<float> egOnCCTimeRange { -100.0, 100.0 };
-	constexpr Range<float> egOnCCPercentRange { -100.0, 100.0 };
-	constexpr Range<float> pitchEgDepthRange { -12000.0, 12000.0 };
-	constexpr Range<float> filterEgDepthRange { -12000.0, 12000.0 };
+    constexpr float vel2sustain { 0.0 };
+    constexpr int depth { 0 };
+    constexpr Range<float> egTimeRange { 0.0, 100.0 };
+    constexpr Range<float> egPercentRange { 0.0, 100.0 };
+    constexpr Range<int> egDepthRange { -12000, 12000 };
+    constexpr Range<float> egOnCCTimeRange { -100.0, 100.0 };
+    constexpr Range<float> egOnCCPercentRange { -100.0, 100.0 };
+    constexpr Range<float> pitchEgDepthRange { -12000.0, 12000.0 };
+    constexpr Range<float> filterEgDepthRange { -12000.0, 12000.0 };
 
     // Flex envelope generators
     constexpr int numFlexEGs { 4 };
@@ -274,8 +274,8 @@ namespace Default
     constexpr int sampleQualityInFreewheelingMode { 10 }; // for future use, possibly excessive
     constexpr Range<int> sampleQualityRange { 1, 10 }; // sample_quality
 
-	constexpr bool checkSustain { true }; // sustain_sw
-	constexpr bool checkSostenuto { true }; // sostenuto_sw
+    constexpr bool checkSustain { true }; // sustain_sw
+    constexpr bool checkSostenuto { true }; // sostenuto_sw
     constexpr Range<int> octaveOffsetRange { -10, 10 }; // octave_offset
     constexpr Range<int> noteOffsetRange { -127, 127 }; // note_offset
 
