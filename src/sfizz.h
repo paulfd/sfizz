@@ -552,6 +552,8 @@ SFIZZ_EXPORTED_API sfizz_oversampling_factor_t sfizz_get_oversampling_factor(sfi
 /**
  * @brief Set the internal oversampling rate.
  *
+ * DEPRECATED: this does nothing and will be removed in a later version.
+ *
  * This is the sampling rate of the engine, not the output or expected rate of
  * the calling function. For the latter use the sfizz_set_sample_rate() function.
  *
@@ -578,6 +580,8 @@ SFIZZ_EXPORTED_API bool sfizz_set_oversampling_factor(sfizz_synth_t* synth, sfiz
 
 /**
  * @brief Get the default resampling quality.
+ *
+ * DEPRECATED: this always returns SFIZZ_OVERSAMPLING_X1 and will be removed in a later version.
  *
  * This is the quality setting which the engine uses when the instrument
  * does not use the opcode `sample_quality`. The engine uses distinct

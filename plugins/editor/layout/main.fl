@@ -205,7 +205,7 @@ widget_class mainView {open
       xywh {5 110 790 285} box ROUNDED_BOX
       class RoundedGroup
     } {
-      Fl_Group controlsPanel_ {open selected
+      Fl_Group controlsPanel_ {open
         xywh {5 110 790 285} box THIN_DOWN_FRAME
         class ControlsPanel
       } {}
@@ -249,6 +249,11 @@ widget_class mainView {open
         comment {tag=kTagSetPreloadSize}
         xywh {455 195 60 25} labelsize 12 textsize 12
         class ValueMenu
+      }
+      Fl_Box {} {
+        label {(DEPRECATED)}
+        xywh {360 170 85 25} labelsize 12
+        class ValueLabel
       }
     }
     Fl_Group {} {

@@ -521,6 +521,8 @@ public:
     /**
      * @brief Set the oversampling factor to a new value.
      *
+     * DEPRECATED: this does nothing and will be removed in a later version.
+     *
      * It will kill all the voices, and trigger a reloading of every file in
      * the FilePool under the new oversampling.
      *
@@ -549,6 +551,9 @@ public:
     /**
      * @brief Return the current oversampling factor.
      * @since 0.2.0
+     *
+     * DEPRECATED: this always returns 1 and will be removed in a later version.
+     *
      */
     int getOversamplingFactor() const noexcept;
 

@@ -81,7 +81,6 @@ set(SFIZZ_HEADERS
     sfizz/MidiState.h
     sfizz/ModifierHelpers.h
     sfizz/OnePoleFilter.h
-    sfizz/Oversampler.h
     sfizz/Panning.h
     sfizz/PolyphonyGroup.h
     sfizz/PowerFollower.h
@@ -129,7 +128,6 @@ set(SFIZZ_SOURCES
     sfizz/Voice.cpp
     sfizz/ScopedFTZ.cpp
     sfizz/MidiState.cpp
-    sfizz/Oversampler.cpp
     sfizz/ADSREnvelope.cpp
     sfizz/Logger.cpp
     sfizz/SfzFilter.cpp

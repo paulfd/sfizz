@@ -1624,13 +1624,13 @@ float sfz::Region::getPhase() const noexcept
     return phase;
 }
 
-uint64_t sfz::Region::getOffset(Oversampling factor) const noexcept
+uint64_t sfz::Region::getOffset() const noexcept
 {
     std::uniform_int_distribution<int64_t> offsetDistribution { 0, offsetRandom };
     uint64_t finalOffset = offset + offsetDistribution(Random::randomGenerator);
     for (const auto& mod: offsetCC)
         finalOffset += static_cast<uint64_t>(mod.data * midiState.getCCValue(mod.cc));
-    return Default::offset.bounds.clamp(finalOffset) * static_cast<uint64_t>(factor);
+    return Default::offset.bounds.clamp(finalOffset);
 }
 
 float sfz::Region::getDelay() const noexcept
@@ -1639,23 +1639,14 @@ float sfz::Region::getDelay() const noexcept
     return delay + delayDistribution(Random::randomGenerator);
 }
 
-uint32_t sfz::Region::trueSampleEnd(Oversampling factor) const noexcept
+uint32_t sfz::Region::trueSampleEnd() const noexcept
 {
     if (sampleEnd <= 0)
         return 0;
 
-    return min(static_cast<uint32_t>(sampleEnd), loopRange.getEnd()) * static_cast<uint32_t>(factor);
+    return min(static_cast<uint32_t>(sampleEnd), loopRange.getEnd());
 }
 
-uint32_t sfz::Region::loopStart(Oversampling factor) const noexcept
-{
-    return loopRange.getStart() * static_cast<uint32_t>(factor);
-}
-
-uint32_t sfz::Region::loopEnd(Oversampling factor) const noexcept
-{
-    return loopRange.getEnd() * static_cast<uint32_t>(factor);
-}
 
 float sfz::Region::getNoteGain(int noteNumber, float velocity) const noexcept
 {

@@ -386,7 +386,7 @@ void Voice::startVoice(Region* region, int delay, const TriggerEvent& event) noe
         }
         impl.updateLoopInformation();
         impl.speedRatio_ = static_cast<float>(impl.currentPromise_->information.sampleRate / impl.sampleRate_);
-        impl.sourcePosition_ = region->getOffset(impl.resources_.filePool.getOversamplingFactor());
+        impl.sourcePosition_ = region->getOffset();
     }
 
     // do Scala retuning and reconvert the frequency into a 12TET key number
@@ -951,7 +951,7 @@ void Voice::Impl::fillWithData(AudioSpan<float> buffer) noexcept
     else {
         // cut short the voice at the instant of reaching end of sample
         const auto sampleEnd = min(
-            int(region_->trueSampleEnd(resources_.filePool.getOversamplingFactor())),
+            int(region_->trueSampleEnd()),
             int(currentPromise_->information.end),
             int(source.getNumFrames()))
             - 1;
@@ -1450,11 +1450,10 @@ void Voice::Impl::updateLoopInformation() noexcept
     if (!region_->shouldLoop())
         return;
     const auto& info = currentPromise_->information;
-    const auto factor = resources_.filePool.getOversamplingFactor();
     const auto rate = info.sampleRate;
 
-    loop_.end = static_cast<int>(region_->loopEnd(factor));
-    loop_.start = static_cast<int>(region_->loopStart(factor));
+    loop_.end = static_cast<int>(region_->loopRange.getEnd());
+    loop_.start = static_cast<int>(region_->loopRange.getStart());
     loop_.size = loop_.end + 1 - loop_.start;
     loop_.xfSize = static_cast<int>(lroundPositive(region_->loopCrossfade * rate));
     loop_.xfOutStart = loop_.end + 1 - loop_.xfSize;

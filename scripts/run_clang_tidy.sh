@@ -11,7 +11,6 @@ clang-tidy \
   src/sfizz/Logger.cpp \
   src/sfizz/MidiState.cpp \
   src/sfizz/Opcode.cpp \
-  src/sfizz/Oversampler.cpp \
   src/sfizz/Panning.cpp \
   src/sfizz/sfizz.cpp \
   src/sfizz/Region.cpp \

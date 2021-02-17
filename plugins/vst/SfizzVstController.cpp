@@ -40,7 +40,7 @@ tresult PLUGIN_API SfizzVstControllerNoUi::initialize(FUnknown* context)
             0, Vst::ParameterInfo::kCanAutomate, Vst::kRootUnitId));
     parameters.addParameter(
         SfizzRange::getForParameter(kPidOversampling).createParameter(
-            Steinberg::String("Oversampling"), pid++, nullptr,
+            Steinberg::String("Oversampling (DEPRECATED)"), pid++, nullptr,
             0, Vst::ParameterInfo::kCanAutomate, Vst::kRootUnitId));
     parameters.addParameter(
         SfizzRange::getForParameter(kPidPreloadSize).createParameter(

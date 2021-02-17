@@ -182,9 +182,9 @@ midnam:update a lv2:Feature .
     a lv2:InputPort, lv2:ControlPort ;
     lv2:index 6 ;
     lv2:symbol "oversampling" ;
-    lv2:name "Internal oversampling factor",
-      "Facteur de suréchantillonnage interne"@fr ,
-      "Fattore Sovracampionamento Interno"@it ;
+    lv2:name "Oversampling factor (DEPRECATED)",
+      "Facteur de suréchantillonnage (OBSOLETE)"@fr ,
+      "Fattore Sovracampionamento (OBSOLETO)"@it ;
     pg:group <@LV2PLUGIN_URI@#config> ;
     lv2:portProperty pprop:notAutomatic ;
     lv2:portProperty pprop:expensive ;

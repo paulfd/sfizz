@@ -149,7 +149,7 @@ static void done(int sig)
 }
 
 ABSL_FLAG(std::string, client_name, "sfizz", "Jack client name");
-ABSL_FLAG(std::string, oversampling, "1x", "Internal oversampling factor (value values are x1, x2, x4, x8)");
+ABSL_FLAG(std::string, oversampling, "1x", "[DEPRECATED] Internal oversampling factor (value values are x1, x2, x4, x8)");
 ABSL_FLAG(uint32_t, preload_size, 8192, "Preloaded value");
 ABSL_FLAG(bool, state, false, "Output the synth state in the jack loop");
 
@@ -170,15 +170,7 @@ int main(int argc, char** argv)
 
     std::cout << "Flags" << '\n';
     std::cout << "- Client name: " << clientName << '\n';
-    std::cout << "- Oversampling: " << oversampling << '\n';
     std::cout << "- Preloaded Size: " << preload_size << '\n';
-    const auto factor = [&]() {
-        if (oversampling == "x1") return 1;
-        if (oversampling == "x2") return 2;
-        if (oversampling == "x4") return 4;
-        if (oversampling == "x8") return 8;
-        return 1;
-    }();
 
     std::cout << "Positional arguments:";
     for (auto& file : filesToParse)
@@ -186,7 +178,6 @@ int main(int argc, char** argv)
     std::cout << '\n';
 
     sfz::Sfizz synth;
-    synth.setOversamplingFactor(factor);
     synth.setPreloadSize(preload_size);
     synth.loadSfzFile(filesToParse[0]);
     std::cout << "==========" << '\n';

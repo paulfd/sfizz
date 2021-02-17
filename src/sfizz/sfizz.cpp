@@ -199,32 +199,15 @@ void sfz::Sfizz::setNumVoices(int numVoices) noexcept
     synth->setNumVoices(numVoices);
 }
 
-bool sfz::Sfizz::setOversamplingFactor(int factor) noexcept
+bool sfz::Sfizz::setOversamplingFactor(int) noexcept
 {
-    using sfz::Oversampling;
-    switch(factor)
-    {
-        case 1:
-            synth->setOversamplingFactor(sfz::Oversampling::x1);
-            return true;
-        case 2:
-            synth->setOversamplingFactor(sfz::Oversampling::x2);
-            return true;
-        case 4:
-            synth->setOversamplingFactor(sfz::Oversampling::x4);
-            return true;
-        case 8:
-            synth->setOversamplingFactor(sfz::Oversampling::x8);
-            return true;
-        default:
-            return false;
-    }
+    return true;
 }
 
 
 int sfz::Sfizz::getOversamplingFactor() const noexcept
 {
-    return static_cast<int>(synth->getOversamplingFactor());
+    return 1;
 }
 
 void sfz::Sfizz::setPreloadSize(uint32_t preloadSize) noexcept
