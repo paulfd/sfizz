@@ -258,6 +258,7 @@ void Synth::Impl::clear()
     groupOpcodes_.clear();
     unknownOpcodes_.clear();
     modificationTime_ = absl::nullopt;
+    playheadMoved_ = false;
 
     // set default controllers
     // midistate is reset above
@@ -913,6 +914,11 @@ void Synth::renderBlock(AudioSpan<float> buffer) noexcept
     BeatClock& bc = impl.resources_.beatClock;
     bc.beginCycle(numFrames);
 
+    if (impl.playheadMoved_) {
+        impl.genController_->resetSmoothers();
+        impl.playheadMoved_ = false;
+    }
+
     { // Clear effect busses
         ScopedTiming logger { callbackBreakdown.effects };
         for (auto& bus : impl.effectBuses_) {
@@ -1174,6 +1180,7 @@ void Synth::Impl::ccDispatch(int delay, int ccNumber, float value) noexcept
 void Synth::hdcc(int delay, int ccNumber, float normValue) noexcept
 {
     Impl& impl = *impl_;
+    DBG("Got CC " << ccNumber << " value " << normValue);
     impl.performHdcc(delay, ccNumber, normValue, true);
 }
 
@@ -1296,6 +1303,16 @@ void Synth::timePosition(int delay, int bar, double barBeat)
     Impl& impl = *impl_;
     ScopedTiming logger { impl.dispatchDuration_, ScopedTiming::Operation::addToDuration };
 
+    const auto newPosition = BBT(bar, barBeat);
+    const auto newBeatPosition = newPosition.toBeats(impl.resources_.beatClock.getTimeSignature());
+    const auto currentBeatPosition = impl.resources_.beatClock.getRunningBeatPosition()[0];
+
+    if (!impl.resources_.beatClock.isPlaying()
+        && newBeatPosition != currentBeatPosition) {
+        DBG("Playback stopped and playhead moved");
+        impl.playheadMoved_ = true;
+    }
+
     impl.resources_.beatClock.setTimePosition(delay, BBT(bar, barBeat));
 }
 
@@ -1305,6 +1322,7 @@ void Synth::playbackState(int delay, int playbackState)
     ScopedTiming logger { impl.dispatchDuration_, ScopedTiming::Operation::addToDuration };
 
     impl.resources_.beatClock.setPlaying(delay, playbackState == 1);
+
 }
 
 int Synth::getNumRegions() const noexcept

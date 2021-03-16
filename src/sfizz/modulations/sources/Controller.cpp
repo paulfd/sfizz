@@ -31,6 +31,20 @@ ControllerSource::~ControllerSource()
 {
 }
 
+void ControllerSource::resetSmoothers()
+{
+    const Resources& res = *impl_->res_;
+
+    for (auto& item : impl_->smoother_) {
+        const ModKey::Parameters p = item.first.parameters();
+        const Curve& curve = res.curves.getCurve(p.curve);
+        const auto lastCCValue = impl_->res_->midiState.getCCValue(p.cc);
+        const auto transformedValue = curve.evalNormalized(lastCCValue);
+        DBG("Smoother on CC " << p.cc << " reset to " << transformedValue);
+        item.second.reset(transformedValue);
+    }
+}
+
 void ControllerSource::setSampleRate(double sampleRate)
 {
     if (impl_->sampleRate_ == sampleRate)

@@ -103,6 +103,11 @@ public:
      */
     void setTimeSignature(unsigned delay, TimeSignature newSig);
     /**
+     * @brief Get the time signature
+     *
+     */
+    TimeSignature getTimeSignature() const noexcept { return timeSig_; }
+    /**
      * @brief Set the time position.
      */
     void setTimePosition(unsigned delay, BBT newPos);

@@ -84,6 +84,7 @@ void BeatClock::beginCycle(unsigned numFrames)
 
 void BeatClock::endCycle()
 {
+    DBG("lastBeatPosition_ " << static_cast<float>(lastClientPos_.toBeats(timeSig_)));
     fillBufferUpTo(currentCycleFrames_);
 }
 
@@ -129,7 +130,6 @@ void BeatClock::setTimeSignature(unsigned delay, TimeSignature newSig)
 void BeatClock::setTimePosition(unsigned delay, BBT newPos)
 {
     fillBufferUpTo(delay);
-
     lastHostPos_ = newPos;
 
     // apply host position in the next frame
@@ -175,31 +175,35 @@ void BeatClock::fillBufferUpTo(unsigned delay)
     for (unsigned i = fillIdx; i < delay; ++i)
         beatsPerBarData[i] = sig.beatsPerBar;
 
-    if (!isPlaying_) {
-        if (fillIdx < delay) {
-            fill(absl::MakeSpan(&beatNumberData[fillIdx], delay - fillIdx), 0);
-            fill(absl::MakeSpan(&beatNumberPosition[fillIdx], delay - fillIdx), 0.0f);
-        }
-        currentCycleFill_ = fillIdx;
-        return;
-    }
-
     BBT clientPos = lastClientPos_;
     const double beatsPerFrame = beatsPerSecond_ * samplePeriod_;
-
     const BBT hostPos = lastHostPos_;
     bool mustApplyHostPos = mustApplyHostPos_;
 
-    for (; fillIdx < delay; ++fillIdx) {
-        clientPos = BBT::fromBeats(sig, clientPos.toBeats(sig) + beatsPerFrame);
+    if (!isPlaying_) {
         clientPos = mustApplyHostPos ? hostPos : clientPos;
         mustApplyHostPos = false;
 
-        // quantization to nearest for prevention of rounding errors
-        double beats = clientPos.toBeats(sig);
-        beatNumberData[fillIdx] = dequantize<int>(quantize(beats));
-        beatNumberPosition[fillIdx] = static_cast<float>(beats);
+        if (fillIdx < delay) {
+            double beats = clientPos.toBeats(sig);
+            // quantization to nearest for prevention of rounding errors
+            fill(absl::MakeSpan(&beatNumberData[fillIdx], delay - fillIdx), dequantize<int>(quantize(beats)));
+            fill(absl::MakeSpan(&beatNumberPosition[fillIdx], delay - fillIdx), static_cast<float>(beats));
+            fillIdx = delay;
+        }
+    } else {
+        for (; fillIdx < delay; ++fillIdx) {
+            clientPos = BBT::fromBeats(sig, clientPos.toBeats(sig) + beatsPerFrame);
+            clientPos = mustApplyHostPos ? hostPos : clientPos;
+            mustApplyHostPos = false;
+
+            // quantization to nearest for prevention of rounding errors
+            double beats = clientPos.toBeats(sig);
+            beatNumberData[fillIdx] = dequantize<int>(quantize(beats));
+            beatNumberPosition[fillIdx] = static_cast<float>(beats);
+        }
     }
+
 
     currentCycleFill_ = fillIdx;
     lastClientPos_ = clientPos;
